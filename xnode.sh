@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+if grep -q $'\r' "$0" 2>/dev/null; then sed -i 's/\r$//' "$0" 2>/dev/null && exec bash "$0" "$@"; fi
 # XNode 管理脚本入口（安装到 /usr/bin/xnode，用法同 V2bX / v2bx）
 # 实际逻辑在 /opt/xnode/xnode
 

@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# 修复 Windows CRLF（必须在 set 之前执行）
+grep -q $'\r' "$0" 2>/dev/null && sed -i 's/\r$//' "$0" && exec bash "$0" "$@"
 # XNode 一键安装（支持一行命令远程安装，用法同 V2bX-script）
 #
 # wget -N "https://raw.githubusercontent.com/mbwso/xnode/main/install.sh" && bash install.sh
