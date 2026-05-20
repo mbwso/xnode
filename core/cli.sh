@@ -180,7 +180,7 @@ cli_show_usage() {
 XNode 管理脚本（交互参考 V2bX）
 
 一行安装:
-  wget -N "${raw}/install.sh" && bash install.sh
+  wget -qO- "${raw}/install.sh" | tr -d '\r' | bash
 
 xnode              显示管理菜单
 xnode install      安装/更新环境

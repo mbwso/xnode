@@ -5,8 +5,16 @@
 ## 一行安装
 
 ```bash
-wget -N "https://raw.githubusercontent.com/mbwso/xnode/main/install.sh" && bash install.sh
+wget -qO- "https://raw.githubusercontent.com/mbwso/xnode/main/install.sh" | tr -d '\r' | bash
 ```
+
+若已下载 install.sh，也可：
+
+```bash
+sed -i 's/\r$//' install.sh && bash install.sh
+```
+
+> 新手上传 GitHub 请看：[docs/上传到GitHub教程.md](docs/上传到GitHub教程.md)
 
 安装完成后：
 

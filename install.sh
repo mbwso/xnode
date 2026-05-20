@@ -3,7 +3,8 @@
 grep -q $'\r' "$0" 2>/dev/null && sed -i 's/\r$//' "$0" && exec bash "$0" "$@"
 # XNode 一键安装（支持一行命令远程安装，用法同 V2bX-script）
 #
-# wget -N "https://raw.githubusercontent.com/mbwso/xnode/main/install.sh" && bash install.sh
+# wget -qO- "https://raw.githubusercontent.com/mbwso/xnode/main/install.sh" | tr -d '\r' | bash
+# 或: wget -N .../install.sh && sed -i 's/\r$//' install.sh && bash install.sh
 #
 # 可选环境变量:
 #   XNODE_REPO=用户名/xnode   GitHub 仓库
@@ -217,7 +218,7 @@ echo "xnode uninstall    卸载"
 echo "------------------------------------------"
 echo
 echo -e "一行安装命令（分享给他人）:"
-echo -e "${YELLOW}wget -N \"${RAW_BASE}/install.sh\" && bash install.sh${NC}"
+echo -e "${YELLOW}wget -qO- \"${RAW_BASE}/install.sh\" | tr -d '\\r' | bash${NC}"
 echo
 
 if [[ ! -f /etc/xnode/.configured ]]; then
