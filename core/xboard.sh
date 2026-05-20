@@ -1,51 +1,42 @@
 #!/usr/bin/env bash
 # Xboard-Node 安装与面板绑定
 
-# 安装 Xboard-Node（通过 xbctl 自举或 GitHub Release）
+# 安装 Xboard-Node（从 GitHub Release 直接下载）
 install_xboard_node() {
-  if cmd_exists xbctl && cmd_exists xboard-node; then
+  if cmd_exists xboard-node; then
     info "Xboard-Node 已安装"
     return 0
   fi
 
   info "正在安装 Xboard-Node..."
 
-  if cmd_exists xbctl; then
-    # xbctl 支持自安装
-    xbctl upgrade 2>/dev/null || true
-  else
-    # 从 GitHub 下载最新 release
-    local arch version asset url tmpdir
-    arch="$(detect_arch)"
-    version="$(curl -fsSL "https://api.github.com/repos/cedar2025/xboard-node/releases/latest" \
-      | jq -r '.tag_name' | sed 's/^v//')"
-    [[ -z "${version}" || "${version}" == "null" ]] && version="latest"
+  # 从 GitHub 下载最新 release
+  local arch version url tmpdir
+  arch="$(detect_arch)"
+  version="$(curl -fsSL "https://api.github.com/repos/cedar2025/xboard-node/releases/latest" \
+    | jq -r '.tag_name' | sed 's/^v//')"
+  [[ -z "${version}" || "${version}" == "null" ]] && version="latest"
 
-    tmpdir="$(mktemp -d)"
-    url="https://github.com/cedar2025/xboard-node/releases/download/v${version}/xboard-node_${version}_linux_${arch}.tar.gz"
+  tmpdir="$(mktemp -d)"
+  url="https://github.com/cedar2025/xboard-node/releases/download/v${version}/xboard-node_${version}_linux_${arch}.tar.gz"
 
-    if ! curl -fsSL "${url}" -o "${tmpdir}/xboard-node.tar.gz" 2>/dev/null; then
-      # 尝试无版本号 latest 资源名
-      warn "指定版本下载失败，尝试使用 xbctl 在线安装..."
-      curl -fsSL "https://raw.githubusercontent.com/cedar2025/xboard-node/main/scripts/install.sh" \
-        -o "${tmpdir}/install.sh" 2>/dev/null && bash "${tmpdir}/install.sh" && rm -rf "${tmpdir}" && return 0
-      error "Xboard-Node 安装失败，请手动安装后重试"
-      rm -rf "${tmpdir}"
-      return 1
-    fi
-
-    tar -xzf "${tmpdir}/xboard-node.tar.gz" -C "${tmpdir}"
-    install -m 755 "${tmpdir}/xboard-node" "${XBOARD_NODE_BIN}" 2>/dev/null \
-      || install -m 755 "${tmpdir}/"*/xboard-node "${XBOARD_NODE_BIN}" 2>/dev/null
-    install -m 755 "${tmpdir}/xbctl" "${XBCTL_BIN}" 2>/dev/null \
-      || install -m 755 "${tmpdir}/"*/xbctl "${XBCTL_BIN}" 2>/dev/null
+  if ! curl -fsSL "${url}" -o "${tmpdir}/xboard-node.tar.gz" 2>/dev/null; then
+    error "Xboard-Node 下载失败，请检查网络或手动安装"
     rm -rf "${tmpdir}"
-  fi
-
-  if ! cmd_exists xbctl; then
-    error "xbctl 未找到，安装失败"
     return 1
   fi
+
+  tar -xzf "${tmpdir}/xboard-node.tar.gz" -C "${tmpdir}"
+  install -m 755 "${tmpdir}/xboard-node" "${XBOARD_NODE_BIN}" 2>/dev/null \
+    || install -m 755 "${tmpdir}/"*/xboard-node "${XBOARD_NODE_BIN}" 2>/dev/null
+
+  if ! cmd_exists xboard-node; then
+    error "Xboard-Node 安装失败"
+    rm -rf "${tmpdir}"
+    return 1
+  fi
+
+  rm -rf "${tmpdir}"
 
   systemctl enable xboard-node 2>/dev/null || true
   success "Xboard-Node 已安装"
