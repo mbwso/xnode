@@ -11,32 +11,34 @@ install_xboard_node() {
   info "正在安装 Xboard-Node..."
 
   # 从 GitHub 下载最新 release
-  local arch version url tmpdir
+  local arch url
   arch="$(detect_arch)"
-  version="$(curl -fsSL "https://api.github.com/repos/cedar2025/xboard-node/releases/latest" \
-    | jq -r '.tag_name' | sed 's/^v//')"
-  [[ -z "${version}" || "${version}" == "null" ]] && version="latest"
+  
+  # 获取最新版本号
+  local version
+  version="$(curl -fsSL "https://api.github.com/repos/cedar2025/Xboard-Node/releases/latest" \
+    | jq -r '.tag_name' 2>/dev/null)"
+  [[ -z "${version}" || "${version}" == "null" ]] && {
+    error "无法获取 Xboard-Node 版本信息"
+    return 1
+  }
 
-  tmpdir="$(mktemp -d)"
-  url="https://github.com/cedar2025/xboard-node/releases/download/v${version}/xboard-node_${version}_linux_${arch}.tar.gz"
+  # 构建下载URL（直接下载二进制文件）
+  url="https://github.com/cedar2025/Xboard-Node/releases/download/${version}/xboard-node-linux-${arch}"
 
-  if ! curl -fsSL "${url}" -o "${tmpdir}/xboard-node.tar.gz" 2>/dev/null; then
+  if ! curl -fsSL "${url}" -o "${XBOARD_NODE_BIN}" 2>/dev/null; then
     error "Xboard-Node 下载失败，请检查网络或手动安装"
-    rm -rf "${tmpdir}"
+    rm -f "${XBOARD_NODE_BIN}"
     return 1
   fi
 
-  tar -xzf "${tmpdir}/xboard-node.tar.gz" -C "${tmpdir}"
-  install -m 755 "${tmpdir}/xboard-node" "${XBOARD_NODE_BIN}" 2>/dev/null \
-    || install -m 755 "${tmpdir}/"*/xboard-node "${XBOARD_NODE_BIN}" 2>/dev/null
+  chmod +x "${XBOARD_NODE_BIN}"
 
   if ! cmd_exists xboard-node; then
     error "Xboard-Node 安装失败"
-    rm -rf "${tmpdir}"
+    rm -f "${XBOARD_NODE_BIN}"
     return 1
   fi
-
-  rm -rf "${tmpdir}"
 
   systemctl enable xboard-node 2>/dev/null || true
   success "Xboard-Node 已安装"
