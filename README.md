@@ -8,8 +8,6 @@
 wget -N "https://raw.githubusercontent.com/mbwso/xnode/main/install.sh" && bash install.sh
 ```
 
-> 新手上传 GitHub 请看：[docs/上传到GitHub教程.md](docs/上传到GitHub教程.md)
-
 安装完成后：
 
 ```bash
