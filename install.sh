@@ -51,7 +51,6 @@ download_repo() {
   fi
 
   tmp="$(mktemp -d)"
-  trap 'rm -rf "${tmp}"' RETURN
 
   if command -v git &>/dev/null; then
     git clone --depth 1 --branch "${XNODE_BRANCH}" \
@@ -81,6 +80,7 @@ download_repo() {
     fail "仓库中未找到 xnode 主程序，请确认目录结构"
   fi
 
+  rm -rf "${tmp}"
   ok "项目文件已下载到 ${INSTALL_DIR}"
 }
 
