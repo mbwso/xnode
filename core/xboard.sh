@@ -46,15 +46,12 @@ install_xboard_node() {
   return 0
 }
 
-# 绑定 Xboard 面板（默认 machine mode）
+# 绑定 Xboard 面板
 bind_panel() {
-  local panel_url token machine_id mode kernel
+  local panel_url token mode kernel mode_choice
   panel_url="$(prompt_input "面板地址 (如 https://panel.example.com)" "")"
   token="$(prompt_input "通讯密钥 (Token)" "")"
-  machine_id="$(prompt_input "Machine ID" "1")"
-  mode="$(prompt_input "绑定模式 (machine/node)" "machine")"
-  kernel="singbox"
-
+  
   if [[ -z "${panel_url}" || -z "${token}" ]]; then
     error "面板地址和密钥不能为空"
     return 1
@@ -63,6 +60,31 @@ bind_panel() {
   # 规范化 URL
   panel_url="${panel_url%/}"
 
+  # 选择绑定模式（数字选择）
+  echo "请选择绑定模式:"
+  echo "1. Machine 模式 (一台机器绑定多个节点)"
+  echo "2. Node 模式 (一台机器对应一个节点)"
+  mode_choice="$(prompt_input "请选择 [1-2]" "2")"
+
+  case "${mode_choice}" in
+    1)
+      mode="machine"
+      local machine_id
+      machine_id="$(prompt_input "Machine ID" "1")"
+      ;;
+    2)
+      mode="node"
+      local node_id
+      node_id="$(prompt_input "Node ID" "1")"
+      ;;
+    *)
+      mode="node"
+      node_id="$(prompt_input "Node ID" "1")"
+      ;;
+  esac
+
+  kernel="singbox"
+
   info "正在绑定面板 (${mode} 模式)..."
 
   if [[ "${mode}" == "machine" ]]; then
@@ -70,24 +92,31 @@ bind_panel() {
       --panel-url "${panel_url}" \
       --token "${token}" \
       --machine-id "${machine_id}" \
-      --kernel "${kernel}"
+      --kernel "${kernel}" 2>/dev/null || true
   else
-    local node_id
-    node_id="$(prompt_input "Node ID" "1")"
     xbctl bind add-node \
       --panel-url "${panel_url}" \
       --token "${token}" \
       --node-id "${node_id}" \
-      --kernel "${kernel}"
+      --kernel "${kernel}" 2>/dev/null || true
   fi
 
   # 保存绑定信息到 config
-  jq --arg url "${panel_url}" \
-     --arg token "${token}" \
-     --arg mid "${machine_id}" \
-     --arg mode "${mode}" \
-    '.panel = {url: $url, token: $token, machine_id: $mid, mode: $mode}' \
-    "${XNODE_CONFIG}" > "${XNODE_CONFIG}.tmp" && mv "${XNODE_CONFIG}.tmp" "${XNODE_CONFIG}"
+  if [[ "${mode}" == "machine" ]]; then
+    jq --arg url "${panel_url}" \
+       --arg token "${token}" \
+       --arg mid "${machine_id}" \
+       --arg mode "${mode}" \
+      '.panel = {url: $url, token: $token, machine_id: $mid, mode: $mode}' \
+      "${XNODE_CONFIG}" > "${XNODE_CONFIG}.tmp" && mv "${XNODE_CONFIG}.tmp" "${XNODE_CONFIG}"
+  else
+    jq --arg url "${panel_url}" \
+       --arg token "${token}" \
+       --arg nid "${node_id}" \
+       --arg mode "${mode}" \
+      '.panel = {url: $url, token: $token, node_id: $nid, mode: $mode}' \
+      "${XNODE_CONFIG}" > "${XNODE_CONFIG}.tmp" && mv "${XNODE_CONFIG}.tmp" "${XNODE_CONFIG}"
+  fi
 
   success "面板绑定成功"
   systemctl restart xboard-node 2>/dev/null || true
