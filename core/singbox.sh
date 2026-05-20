@@ -1,12 +1,18 @@
 #!/usr/bin/env bash
 # sing-box 安装与配置合并
 
-# 获取最新 sing-box 版本号
+# 获取最新 sing-box 版本号（只取一行，避免 URL 畸形）
 singbox_latest_version() {
-  curl -fsSL "${SINGBOX_REPO}/latest" \
-    | grep -oP 'tag/v\K[0-9.]+' 2>/dev/null \
-    || curl -fsSL "https://api.github.com/repos/SagerNet/sing-box/releases/latest" \
-      | jq -r '.tag_name' | sed 's/^v//'
+  local ver
+  ver="$(curl -fsSL "https://api.github.com/repos/SagerNet/sing-box/releases/latest" 2>/dev/null \
+    | jq -r '.tag_name // empty' | sed 's/^v//')"
+  if [[ -z "${ver}" ]]; then
+    ver="$(curl -fsSLI "${SINGBOX_REPO}/latest" 2>/dev/null \
+      | awk -F'/tag/v' '/^location:/I {print $2; exit}' | tr -d '\r\n')"
+    ver="${ver%%/*}"
+  fi
+  # 只保留 x.y.z
+  echo "${ver}" | head -1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1
 }
 
 # 安装 sing-box
@@ -19,6 +25,10 @@ install_singbox() {
   fi
 
   version="$(singbox_latest_version)"
+  version="${version//$'\n'/}"
+  version="${version//$'\r'/}"
+  version="$(printf '%s' "${version}" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)"
+  [[ -z "${version}" ]] && { error "无法获取 sing-box 版本号"; return 1; }
   info "正在安装 sing-box v${version} (${arch})..."
 
   tmpdir="$(mktemp -d)"

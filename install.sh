@@ -200,6 +200,14 @@ source "${INSTALL_DIR}/core/xboard.sh"
 source "${INSTALL_DIR}/core/tls.sh"
 source "${INSTALL_DIR}/core/service.sh"
 
+# 覆盖旧版 sing-box 版本检测（GitHub 未更新 core/singbox.sh 时也能安装）
+singbox_latest_version() {
+  local ver
+  ver="$(curl -fsSL "https://api.github.com/repos/SagerNet/sing-box/releases/latest" 2>/dev/null \
+    | jq -r '.tag_name // empty' | sed 's/^v//')"
+  printf '%s' "${ver}" | tr -d '\r\n ' | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1
+}
+
 install_singbox
 install_xboard_node
 install_certbot 2>/dev/null || log "certbot 稍后可通过菜单安装"
