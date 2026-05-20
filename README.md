@@ -1,6 +1,6 @@
 # XNode
 
-中文增强版 **Xboard-Node** CLI 管理器。交互参考 [V2bX-script](https://github.com/wyx2685/V2bX-script)。
+**Xboard-Node** CLI 管理器。交互参考 [V2bX](https://github.com/wyx2685/V2bX)。
 
 ## 一行安装
 
