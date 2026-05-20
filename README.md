@@ -5,13 +5,13 @@
 ## 一行安装
 
 ```bash
-wget -qO- "https://raw.githubusercontent.com/mbwso/xnode/main/install.sh" | tr -d '\r' | bash
+wget -qO- "https://raw.githubusercontent.com/mbwso/xnode/main/install.sh" | tr -d '\r' > /tmp/xnode-install.sh && bash /tmp/xnode-install.sh
 ```
 
-若已下载 install.sh，也可：
+或：
 
 ```bash
-sed -i 's/\r$//' install.sh && bash install.sh
+wget -N "https://raw.githubusercontent.com/mbwso/xnode/main/install.sh" && sed -i 's/\r$//' install.sh && bash install.sh
 ```
 
 > 新手上传 GitHub 请看：[docs/上传到GitHub教程.md](docs/上传到GitHub教程.md)

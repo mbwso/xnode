@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
-# 修复 Windows CRLF（必须在 set 之前执行）
-grep -q $'\r' "$0" 2>/dev/null && sed -i 's/\r$//' "$0" && exec bash "$0" "$@"
+# 管道安装检测（wget | bash 时 BASH_SOURCE 为空）
+_IS_PIPE=0
+[[ -z "${BASH_SOURCE[0]:-}" ]] && _IS_PIPE=1
+
+# 修复 Windows CRLF（仅本地文件模式）
+if [[ "${_IS_PIPE}" -eq 0 ]] && [[ -f "${BASH_SOURCE[0]}" ]]; then
+  grep -q $'\r' "${BASH_SOURCE[0]}" 2>/dev/null && sed -i 's/\r$//' "${BASH_SOURCE[0]}" && exec bash "${BASH_SOURCE[0]}" "$@"
+fi
 # XNode 一键安装（支持一行命令远程安装，用法同 V2bX-script）
 #
 # wget -qO- "https://raw.githubusercontent.com/mbwso/xnode/main/install.sh" | tr -d '\r' | bash
@@ -102,12 +108,15 @@ EOF
 # --- 权限检测 ---
 [[ "${EUID:-$(id -u)}" -eq 0 ]] || fail "请使用 root 运行: sudo bash install.sh"
 
-# --- 解析本地脚本目录 ---
-SCRIPT_PATH="${BASH_SOURCE[0]}"
-if [[ "${SCRIPT_PATH}" != /* ]]; then
-  SCRIPT_DIR="$(cd "$(dirname "${SCRIPT_PATH}")" && pwd)"
-else
-  SCRIPT_DIR="$(dirname "${SCRIPT_PATH}")"
+# --- 解析本地脚本目录（管道安装时跳过，直接从 GitHub 拉取）---
+SCRIPT_DIR=""
+if [[ "${_IS_PIPE}" -eq 0 ]]; then
+  SCRIPT_PATH="${BASH_SOURCE[0]}"
+  if [[ "${SCRIPT_PATH}" != /* ]]; then
+    SCRIPT_DIR="$(cd "$(dirname "${SCRIPT_PATH}")" && pwd)"
+  else
+    SCRIPT_DIR="$(dirname "${SCRIPT_PATH}")"
+  fi
 fi
 
 # --- 系统检测 ---
@@ -156,7 +165,7 @@ if ! command -v yq &>/dev/null; then
 fi
 
 # --- 获取项目文件 ---
-if need_download_repo "${SCRIPT_DIR}"; then
+if [[ "${_IS_PIPE}" -eq 1 ]] || need_download_repo "${SCRIPT_DIR}"; then
   download_repo
 else
   log "从本地目录安装到 ${INSTALL_DIR}..."
@@ -229,9 +238,9 @@ if [[ ! -f /etc/xnode/.configured ]]; then
   fi
 fi
 
-# 远程 wget 时删除当前目录 install.sh（同 V2bX）
-if [[ "${SCRIPT_DIR}" != "${INSTALL_DIR}" ]] && [[ -f "${SCRIPT_DIR}/install.sh" ]] \
-  && need_download_repo "${SCRIPT_DIR}" 2>/dev/null; then
+# 远程 wget 到当前目录时删除 install.sh（同 V2bX）
+if [[ "${_IS_PIPE}" -eq 0 && -n "${SCRIPT_DIR}" ]] && [[ "${SCRIPT_DIR}" != "${INSTALL_DIR}" ]] \
+  && [[ -f "${SCRIPT_DIR}/install.sh" ]] && need_download_repo "${SCRIPT_DIR}" 2>/dev/null; then
   rm -f "${SCRIPT_DIR}/install.sh" 2>/dev/null || true
 fi
 
