@@ -7,10 +7,15 @@
     "servers": [
       {
         "tag": "cf",
-        "address": "1.1.1.1"
+        "address": "1.1.1.1",
+        "strategy": "prefer_ipv4"
       }
     ],
-    "strategy": "prefer_ipv4"
+    "rules": [],
+    "independent_cache": true,
+    "fakeip": {
+      "enabled": false
+    }
   },
   "inbounds": [],
   "outbounds": [

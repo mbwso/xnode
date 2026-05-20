@@ -55,6 +55,7 @@ After=network.target nss-lookup.target
 
 [Service]
 Type=simple
+Environment="ENABLE_DEPRECATED_LEGACY_DNS_SERVERS=true"
 ExecStart=/usr/local/bin/sing-box run -c /etc/sing-box/config.json
 Restart=on-failure
 RestartSec=5s
