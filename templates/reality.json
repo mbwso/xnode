@@ -1,0 +1,25 @@
+{
+  "type": "vless",
+  "tag": "reality-in",
+  "listen": "::",
+  "listen_port": 443,
+  "users": [
+    {
+      "uuid": "00000000-0000-0000-0000-000000000000",
+      "flow": "xtls-rprx-vision"
+    }
+  ],
+  "tls": {
+    "enabled": true,
+    "server_name": "www.cloudflare.com",
+    "reality": {
+      "enabled": true,
+      "handshake": {
+        "server": "www.cloudflare.com",
+        "server_port": 443
+      },
+      "private_key": "",
+      "short_id": [""]
+    }
+  }
+}

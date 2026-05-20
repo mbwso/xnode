@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "domain": "",
+  "listen_ip": "",
+  "cert": {
+    "mode": "http",
+    "domain": ""
+  },
+  "panel": {
+    "url": "",
+    "token": "",
+    "machine_id": "",
+    "mode": "machine"
+  },
+  "protocols": []
+}

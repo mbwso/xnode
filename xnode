@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# XNode 主入口（CLI 子命令参考 V2bX-script）
+# 用法: sudo xnode | sudo xnode generate | sudo xnode start ...
+
+set -uo pipefail
+
+_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export XNODE_ROOT="${XNODE_ROOT:-${_SCRIPT_DIR}}"
+
+# shellcheck source=core/env.sh
+source "${XNODE_ROOT}/core/env.sh"
+# shellcheck source=core/utils.sh
+source "${XNODE_ROOT}/core/utils.sh"
+# shellcheck source=core/singbox.sh
+source "${XNODE_ROOT}/core/singbox.sh"
+# shellcheck source=core/xboard.sh
+source "${XNODE_ROOT}/core/xboard.sh"
+# shellcheck source=core/tls.sh
+source "${XNODE_ROOT}/core/tls.sh"
+# shellcheck source=core/firewall.sh
+source "${XNODE_ROOT}/core/firewall.sh"
+# shellcheck source=core/service.sh
+source "${XNODE_ROOT}/core/service.sh"
+# shellcheck source=core/cli.sh
+source "${XNODE_ROOT}/core/cli.sh"
+
+for _proto in "${XNODE_PROTOCOLS}"/*.sh; do
+  # shellcheck source=/dev/null
+  [[ -f "${_proto}" ]] && source "${_proto}"
+done
+
+# shellcheck source=core/wizard.sh
+source "${XNODE_ROOT}/core/wizard.sh"
+# shellcheck source=core/menu.sh
+source "${XNODE_ROOT}/core/menu.sh"
+
+if [[ $# -gt 0 ]]; then
+  case "$1" in
+    help|-h|--help|version|status) ;;
+    *) require_root ;;
+  esac
+  xnode_cli_dispatch "$@" || exit 1
+  exit 0
+fi
+
+main_menu
